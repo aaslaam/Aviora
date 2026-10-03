@@ -50,7 +50,10 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
         {userDummyData.map((user, index) => (
           <div
             key={index}
-            onClick={() => setSelectedUser(user)}
+            onClick={() => {
+              setSelectedUser(user);
+              console.log('clicked', user);
+            }}
             className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:text-sm ${selectedUser?._id === user._id && 'bg-[#282142] '}`}
           >
             <img
