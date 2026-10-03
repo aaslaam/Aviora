@@ -52,7 +52,7 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
             key={index}
             onClick={() => {
               setSelectedUser(user);
-              console.log('clicked', user);
+              
             }}
             className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:text-sm ${selectedUser?._id === user._id && 'bg-[#282142] '}`}
           >
@@ -63,6 +63,7 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
             />
             <div className="flex flex-col leading-5">
               <p>{user.fullName}</p>
+              {/* Online/Offline status */}
               {
                 index > 3 ?
                 <span className='text-green-400 text-xs'>Online</span>  :
@@ -70,6 +71,7 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
               }
             </div>
             <div>
+              {/* Notification badge */}
               {
                 index > 2 && <p className='absolute top-4 right-4 text-xs h-5 w-5 flex justify-center items-center rounded-full bg-violet-500/50 '>{index}</p>
               }
