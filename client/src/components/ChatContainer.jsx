@@ -1,9 +1,16 @@
-import React from 'react'
+import React, { useEffect, useRef } from "react";
 import assets, { messagesDummyData } from "../assets/assets";
+import { MsgTimeFormat } from "../lib/utils";
 
 const currentUserId = '680f50e4f10f3cd28382ecf9'
 
 const ChatContainer = ({ selectedUser, setSelectedUser }) => {
+  const scrollEnd = useRef(null)
+
+  useEffect(() => {
+    scrollEnd.current?.scrollIntoView({ behavior: "smooth" })
+  }, [selectedUser])
+
   return selectedUser ? (
     <div className='w-full overflow-scroll relative backdrop-blur-lg'>
       {/* Chat Header */}
@@ -53,10 +60,11 @@ const ChatContainer = ({ selectedUser, setSelectedUser }) => {
                 className="w-7 rounded-full"
                 alt="ProfilePic"
               />
-              <p className='text-gray-500'>{msg.createdAt}</p>
+              <p className='text-gray-500'>{MsgTimeFormat(msg.createdAt)}</p>
             </div>
           </div>
         ))}
+        <div ref={scrollEnd}></div>
       </div>
     </div>
   ) : (
