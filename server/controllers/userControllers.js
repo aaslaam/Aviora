@@ -16,7 +16,7 @@ export const signup = async (req, res) => {
         if (user) {
             return res.json({ success: false, message: "Account Already Exists" });
         }
-
+// pass hashing
         const salt = await bcrypt.genSalt(10);
         const hashedPass = await bcrypt.hash(password, salt);
 
@@ -62,3 +62,8 @@ export const login = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+// controller check user auth
+
+    export const checkAuth = (req,res)=>{
+        res.json({success:true,user:req.user})
+    }
