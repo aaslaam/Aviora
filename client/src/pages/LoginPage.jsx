@@ -17,10 +17,6 @@ const LoginPage = () => {
       SetIsDataSubmitted(true)
       return
     }
-
-    // Final submit (sign up step 2, or login)
-    // TODO: call your API here
-    console.log({ fullName, email, password, bio, curState })
   }
 
   return (
