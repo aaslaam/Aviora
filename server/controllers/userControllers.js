@@ -71,7 +71,7 @@ export const login = async (req, res) => {
 
 // controller update prof
 
-export const updateProfile = async(req,res){
+export const updateProfile = async(req,res)=>{
     try {
         const [fullName,profilePic,bio] = req.body
 
