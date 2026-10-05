@@ -4,11 +4,13 @@ import {User }from "../Models/Users/"
 
 // get all users except logged in user
 
-const getUsersForSidebar = async ()=>{
+export  const getUsersForSidebar = async ()=>{
     try {
     const userId =  req.user._id
 
-    const filteredUsers = await User.find({_id}{$ne:userId}).select("-password")
+    const filteredUsers = await User.find({_id},{$ne:userId}).select("-password")
+
+  
 
     // count messages not seen
 
