@@ -1,6 +1,6 @@
 import Message from "../Models/Message"
-
 import {User }from "../Models/Users/"
+import {cloudinary} from "../lib/cloudinary.js"
 
 // get all users except logged in user
 
@@ -76,3 +76,29 @@ export const markMsgAsSeen = async (req,res) => {
     }
 }
 
+// send Msgs to selected user
+
+export const sendMsgs = async (req,res) => {
+    try {
+        const {image,text} = req.body
+        const recieverId = req.params.id
+        const senderId = req.User._id
+        let imageUrl
+
+        if(image){
+            const uploadResponse = await cloudinary.uploader.upload(image)
+            imageUrl = uploadResponse.secure_url
+        }
+        const newMsg = Message.create({
+            senderId,
+            recieverId,
+            text,
+            image:imageUrl
+        })
+        res.json({ success:true,newMsg});
+
+    } catch (error) {
+         console.error(error.message);
+        res.json({ success: false, message: error.message });
+    }
+}
