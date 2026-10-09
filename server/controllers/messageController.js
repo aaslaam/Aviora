@@ -99,7 +99,7 @@ export const sendMsgs = async (req,res) => {
         // emit new msg to reciever id
             const recieverSocketId = userSocketMap(recieverId)
 
-            IF(recieverSocketId){
+            if(recieverSocketId){
                 io.to(recieverSocketId).emit("newMsg",newMsg)
             }
 
