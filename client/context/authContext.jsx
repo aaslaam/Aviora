@@ -63,6 +63,25 @@ export const AuthProvider = ({children})=>{
         toast.success("Logged Out Sucessfully")
         socket.disconnect()
     }
+    // update profle func to handle user prfile updates
+
+      const updateProfile = async (body) => {
+           try {
+             const {data} = axios.post("/api/auth/update-profile",body) 
+             if(data.sucess){
+            setAuthUser(data.user)
+            toast.sucess("Profile Updated Sucessfully")
+            
+          }else{
+            toast.error(data.message)
+
+          }
+           } catch (error) {
+            toast.error(error.message)
+            
+           }
+
+    }
 
 
     // CONNECT func to handle socket connection and online use updates
