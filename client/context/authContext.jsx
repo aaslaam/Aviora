@@ -1,122 +1,114 @@
-import axios from "axios"
-import {  createContext, useState , useEffect} from "react";
+import axios from "axios";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "react-hot-toast";
-import {io} from "socket.io-client"
-export const authContext = createContext()
+import { io } from "socket.io-client";
+import { authContext, backendUrl } from "./authContextValue";
 
+export const AuthProvider = ({ children }) => {
+  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [authUser, setAuthUser] = useState(null);
+  const [socket, setSocket] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const socketRef = useRef(null);
 
-export const backendUrl = import.meta.env.VITE_BACKEND
-axios.defaults.baseURL = backendUrl
+  // connect socket + listen for online users
+  const connectSocket = useCallback((userData) => {
+    if (!userData || socketRef.current) return;
+    const newSocket = io(backendUrl, {
+      query: { userId: userData._id },
+    });
+    socketRef.current = newSocket;
+    setSocket(newSocket);
+    newSocket.on("getOnlineUsers", (userIds) => {
+      setOnlineUsers(userIds);
+    });
+  }, []);
 
-export const AuthProvider = ({children})=>{
-    const {token,setToken} = useState(localStorage.getItem("token"))
-    const {authUser,setAuthUser} = useState(null)
-    const {socket,setSocket} = useState(null)
-    const {onlineUsers,setOnlineUsers} = useState([])
-
-
-    // check if user is auth then connect to socket
-
-    const checkAuth = async (params) => {
-        try {
-          const {data} = await axios.get("/api/auth/check")
-          if(data.sucess){
-            setAuthUser(data.user)
-            conncetSocket(data.user)
-          }
-        } catch (error) {
-              toast.error(error.message)
-        }
-    }
-
-    // login func handle user auth 
-    const login = async (state,credentials) => {
-           try {
-             const {data} = axios.post(`/api/auth/${state}`,credentials) 
-             if(data.sucess){
-            setAuthUser(data.user)
-            conncetSocket(data.user)
-            axios.defaults.headers.common["token"] = data.token 
-            setToken(data.token)
-            localStorage.setItem("token",data.token)
-            toast.sucess(data.message)
-            
-          }else{
-            toast.error(data.message)
-
-          }
-           } catch (error) {
-            toast.error(error.message)
-            
-           }
-
-    }
-
-    // logout and socket disc func
-
-    const logout = async () => {
-        localStorage.removeItem("token")
-        setToken(null)
-        setAuthUser(null)
-        setOnlineUsers([])
-        axios.defaults.headers.common["token"] = null
-        toast.success("Logged Out Sucessfully")
-        socket.disconnect()
-    }
-    // update profle func to handle user prfile updates
-
-      const updateProfile = async (body) => {
-           try {
-             const {data} = axios.post("/api/auth/update-profile",body) 
-             if(data.sucess){
-            setAuthUser(data.user)
-            toast.sucess("Profile Updated Sucessfully")
-            
-          }else{
-            toast.error(data.message)
-
-          }
-           } catch (error) {
-            toast.error(error.message)
-            
-           }
-
-    }
-
-
-    // CONNECT func to handle socket connection and online use updates
-    const conncetSocket = (userData)=>{
-        if(userData || socket?.connected) return
-        const newSocket = io(backendUrl,{
-            query:{
-                 userId:userData._id
-            }
-        })
-        newSocket.connect()
-        setSocket(newSocket)
-        newSocket.on("getOnlineUsers",(userIds)=>{
-            setOnlineUsers(userIds)
-        })
-    }
-
-    useEffect(() => {
-      if(token){
-        axios.defaults.headers.common["token"] = token 
+  // login / signup
+  const login = async (state, credentials) => {
+    try {
+      const { data } = await axios.post(`/api/auth/${state}`, credentials);
+      if (data.sucess) {
+        setAuthUser(data.user);
+        connectSocket(data.user);
+        setToken(data.token); // header set in effect below
+        localStorage.setItem("token", data.token);
+        toast.success(data.message);
+      } else {
+        toast.error(data.message);
       }
-    }, [])
-    
-    const value  = {
-        axios,
-        onlineUsers,
-        socket,
-        authUser
+    } catch (error) {
+      toast.error(error.message);
     }
-    return(
-         <authContext.Provider value={value}>
-                {
-                    children
-                }
-        </authContext.Provider>
-    )
-   
-}
+  };
+
+  // logout + socket disconnect
+  const logout = async () => {
+    localStorage.removeItem("token");
+    setToken(null); // header removed in effect below
+    setAuthUser(null);
+    setOnlineUsers([]);
+    socketRef.current?.disconnect();
+    socketRef.current = null;
+    setSocket(null);
+    toast.success("Logged Out Successfully");
+  };
+
+  // update profile
+  const updateProfile = async (body) => {
+    try {
+      const { data } = await axios.post("/api/auth/update-profile", body);
+      if (data.sucess) {
+        setAuthUser(data.user);
+        toast.success("Profile Updated Successfully");
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  // keep axios header in sync with token (must run before auth check effect)
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common["token"] = token;
+    } else {
+      delete axios.defaults.headers.common["token"];
+    }
+  }, [token]);
+
+  // token present: verify user, then connect socket
+  // setState only inside promise callbacks, not sync in effect body
+  useEffect(() => {
+    if (!token) return;
+    let ignore = false;
+    axios
+      .get("/api/auth/check")
+      .then(({ data }) => {
+        if (ignore) return;
+        if (data.sucess) {
+          setAuthUser(data.user);
+          connectSocket(data.user);
+        }
+      })
+      .catch((error) => {
+        if (!ignore) toast.error(error.message);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [token, connectSocket]);
+
+  const value = {
+    axios,
+    onlineUsers,
+    socket,
+    authUser,
+    login,
+    logout,
+    updateProfile,
+  };
+
+  return <authContext.Provider value={value}>{children}</authContext.Provider>;
+};
