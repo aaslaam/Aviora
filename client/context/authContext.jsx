@@ -28,6 +28,43 @@ export const AuthProvider = ({children})=>{
               toast.error(error.message)
         }
     }
+
+    // login func handle user auth 
+    const login = async (state,credentials) => {
+           try {
+             const {data} = axios.post(`/api/auth/${state}`,credentials) 
+             if(data.sucess){
+            setAuthUser(data.user)
+            conncetSocket(data.user)
+            axios.defaults.headers.common["token"] = data.token 
+            setToken(data.token)
+            localStorage.setItem("token",data.token)
+            toast.sucess(data.message)
+            
+          }else{
+            toast.error(data.message)
+
+          }
+           } catch (error) {
+            toast.error(error.message)
+            
+           }
+
+    }
+
+    // logout and socket disc func
+
+    const logout = async () => {
+        localStorage.removeItem("token")
+        setToken(null)
+        setAuthUser(null)
+        setOnlineUsers([])
+        axios.defaults.headers.common["token"] = null
+        toast.success("Logged Out Sucessfully")
+        socket.disconnect()
+    }
+
+
     // CONNECT func to handle socket connection and online use updates
     const conncetSocket = (userData)=>{
         if(userData || socket?.connected) return
