@@ -6,7 +6,8 @@ export const backendUrl = import.meta.env.VITE_BACKEND;
 axios.defaults.baseURL = backendUrl;
 
 export const AuthContext = createContext();
-export const authContext = AuthContext;
+export const authContext = AuthContext; // alias, old imports still work
+
 export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem("token"));
     const [authUser, setAuthUser] = useState(null);
@@ -66,6 +67,20 @@ export const AuthProvider = ({ children }) => {
         setSocket(null);
     };
 
+    // update profile, server return updated user
+    const updateProfile = async (body) => {
+        try {
+            const { data } = await axios.put("/api/auth/update-profile", body);
+            if (data.success) {
+                setAuthUser(data.user);
+            }
+            return data;
+        } catch (error) {
+            console.log(error.message);
+            return { success: false, message: error.message };
+        }
+    };
+
     useEffect(() => {
         if (token) {
             axios.defaults.headers.common["token"] = token;
@@ -80,7 +95,8 @@ export const AuthProvider = ({ children }) => {
         socket,
         login,
         logout,
+        updateProfile,
     };
 
-    return <authContext.Provider value={value}>{children}</authContext.Provider>;
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
