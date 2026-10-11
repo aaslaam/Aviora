@@ -1,4 +1,4 @@
-import mongoose from mongoose
+import mongoose from "mongoose"
 
 // messages model
 const messageSchema = new mongoose.Schema({
