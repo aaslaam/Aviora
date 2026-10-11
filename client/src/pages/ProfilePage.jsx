@@ -72,7 +72,7 @@ const ProfilePage = () => {
           ></textarea>
           <button type="submit" className='bg-linear-to-r from-purple-400 to-purple-600 text-white p-2 rounded-full text-lg cursor-pointer'>Save Changes</button>
         </form>
-        <img src={assets.logo_icon} className="max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10" alt="logo" />
+        <img src={authUser?.profilePic||assets.logo_icon} className="max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10" alt="logo" />
       </div>
     </div>
   )
