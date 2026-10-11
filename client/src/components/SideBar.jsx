@@ -1,9 +1,16 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import assets, { userDummyData } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
+import { AuthContext } from '../../context/authContext'
 
 const SideBar = ({ selectedUser, setSelectedUser }) => {
   const navigate = useNavigate()
+  const { logout } = useContext(AuthContext)
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   return (
     <div
@@ -29,7 +36,9 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
                 Edit Profile
               </p>
               <hr className="my-2 border-t border-gray-500" />
-              <p className="cursor-pointer text-sm">Logout</p>
+              <p onClick={handleLogout} className="cursor-pointer text-sm">
+                Logout
+              </p>
             </div>
           </div>
         </div>
@@ -51,10 +60,11 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
           <div
             key={index}
             onClick={() => {
-              setSelectedUser(user);
-              
+              setSelectedUser(user)
             }}
-            className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:text-sm ${selectedUser?._id === user._id && 'bg-[#282142] '}`}
+            className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:text-sm ${
+              selectedUser?._id === user._id && 'bg-[#282142] '
+            }`}
           >
             <img
               src={user?.profilePic || assets.avatar_icon}
@@ -64,17 +74,19 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
             <div className="flex flex-col leading-5">
               <p>{user.fullName}</p>
               {/* Online/Offline status */}
-              {
-                index > 3 ?
-                <span className='text-green-400 text-xs'>Online</span>  :
-                <span className='text-neutral-400 text-xs'>Offline</span>
-              }
+              {index > 3 ? (
+                <span className="text-green-400 text-xs">Online</span>
+              ) : (
+                <span className="text-neutral-400 text-xs">Offline</span>
+              )}
             </div>
             <div>
               {/* Notification badge */}
-              {
-                index > 2 && <p className='absolute top-4 right-4 text-xs h-5 w-5 flex justify-center items-center rounded-full bg-violet-500/50 '>{index}</p>
-              }
+              {index > 2 && (
+                <p className="absolute top-4 right-4 text-xs h-5 w-5 flex justify-center items-center rounded-full bg-violet-500/50">
+                  {index}
+                </p>
+              )}
             </div>
           </div>
         ))}
