@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import {Routes, Route, Navigate} from 'react-router-dom'
 import { Toaster } from "react-hot-toast";
-import Homepage from './pages/HomePage'
+import Homepage from './pages/Homepage'
 import LoginPage from './pages/LoginPage'
 import ProfilePage from './pages/ProfilePage'
 import {AuthContext} from '../context/authContext'
