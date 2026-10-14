@@ -1,45 +1,49 @@
-import React, { useContext, useState, useEffect } from 'react'
-import assets from '../assets/assets'
-import { useNavigate } from 'react-router-dom'
-import { AuthContext } from '../../context/authContext'
-import { ChatContext } from '../../context/chatContext'
+import React, { useContext, useState, useEffect } from "react";
+import assets from "../assets/assets";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/authContext";
+import { ChatContext } from "../../context/chatContext";
 
 const SideBar = () => {
-  const navigate = useNavigate()
-  const { logout, onlineUsers } = useContext(AuthContext)
+  const navigate = useNavigate();
+  const { logout, onlineUsers } = useContext(AuthContext);
   const {
-    users, selectedUsers, getUsers,
-    SetSelectedUsers, unseenMsgs, SetUnseenMsgs
-  } = useContext(ChatContext)
+    users,
+    selectedUsers,
+    getUsers,
+    SetSelectedUsers,
+    unseenMsgs,
+    SetUnseenMsgs,
+  } = useContext(ChatContext);
 
-  const [input, SetInput] = useState('')
+  const [input, SetInput] = useState("");
 
   const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+    logout();
+    navigate("/login");
+  };
 
   // select user + clear unread badge
   const handleSelectUser = (user) => {
-    SetSelectedUsers(user)
-    SetUnseenMsgs((prev) => ({ ...prev, [user._id]: 0 }))
-  }
+    SetSelectedUsers(user);
+    SetUnseenMsgs((prev) => ({ ...prev, [user._id]: 0 }));
+  };
 
   // filtered users search bar
   const filteredUsers = input.trim()
     ? users.filter((user) =>
-        user.fullName.toLowerCase().includes(input.trim().toLowerCase())
+        user.fullName.toLowerCase().includes(input.trim().toLowerCase()),
       )
-    : users
+    : users;
 
   useEffect(() => {
-    getUsers()
-  }, [onlineUsers])
+    getUsers();
+  }, [onlineUsers]);
 
   return (
     <div
       className={`bg-[#8185B2]/10 h-full p-5 rounded-r-xl overflow-y-scroll text-white ${
-        selectedUsers ? 'max-md:hidden' : ''
+        selectedUsers ? "max-md:hidden" : ""
       }`}
     >
       <div className="pb-5">
@@ -54,7 +58,7 @@ const SideBar = () => {
             {/* Dropdown Menu */}
             <div className="absolute right-0 top-full z-20 w-32 p-5 rounded-md bg-[#282142] border border-gray-600 text-gray-100 hidden group-hover:block">
               <p
-                onClick={() => navigate('/profile')}
+                onClick={() => navigate("/profile")}
                 className="cursor-pointer text-sm"
               >
                 Edit Profile
@@ -87,7 +91,7 @@ const SideBar = () => {
             key={user._id}
             onClick={() => handleSelectUser(user)}
             className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:text-sm ${
-              selectedUsers?._id === user._id && 'bg-[#282142] '
+              selectedUsers?._id === user._id && "bg-[#282142] "
             }`}
           >
             <img
@@ -117,7 +121,7 @@ const SideBar = () => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default SideBar
+export default SideBar;

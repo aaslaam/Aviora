@@ -1,33 +1,32 @@
-import React, { useState,useContext } from 'react'
+import React, { useState, useContext } from "react";
 
-import assets from '../assets/assets'
+import assets from "../assets/assets";
 import { AuthContext } from "../../context/authContext";
 const LoginPage = () => {
-  const [curState, SetCurState] = useState('Sign Up')
-  const [fullName, SetFullName] = useState('')
-  const [email, SetEmail] = useState('')
-  const [password, SetPassword] = useState('')
-  const [bio, SetBio] = useState('')
-  const [isDataSubmitted, SetIsDataSubmitted] = useState(false)
+  const [curState, SetCurState] = useState("Sign Up");
+  const [fullName, SetFullName] = useState("");
+  const [email, SetEmail] = useState("");
+  const [password, SetPassword] = useState("");
+  const [bio, SetBio] = useState("");
+  const [isDataSubmitted, SetIsDataSubmitted] = useState(false);
 
-    const {login} = useContext(AuthContext)
-  
+  const { login } = useContext(AuthContext);
 
   const handleSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     //  go to the bio step
-    if (curState === 'Sign Up' && !isDataSubmitted) {
-      SetIsDataSubmitted(true)
-      return
+    if (curState === "Sign Up" && !isDataSubmitted) {
+      SetIsDataSubmitted(true);
+      return;
     }
-    login(curState  == 'Sign Up' ? "signup" : "login",{
+    login(curState == "Sign Up" ? "signup" : "login", {
       fullName,
       bio,
       email,
-      password
-    })
-  }
+      password,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-cover bg-center flex items-center justify-center gap-8 sm:justify-evenly max-sm:flex-col backdrop-blur-2xl">
@@ -51,7 +50,7 @@ const LoginPage = () => {
           )}
         </h2>
 
-        {curState === 'Sign Up' && !isDataSubmitted && (
+        {curState === "Sign Up" && !isDataSubmitted && (
           <input
             onChange={(e) => SetFullName(e.target.value)}
             value={fullName}
@@ -83,7 +82,7 @@ const LoginPage = () => {
           </>
         )}
 
-        {curState === 'Sign Up' && isDataSubmitted && (
+        {curState === "Sign Up" && isDataSubmitted && (
           <>
             <h2 className="text-lg text-gray-400">Tell us about yourself!</h2>
             <textarea
@@ -100,10 +99,10 @@ const LoginPage = () => {
           type="submit"
           className="py-3 bg-linear-to-r from-purple-400 to-violet-600 text-white rounded-md cursor-pointer"
         >
-          {curState === 'Sign Up' ? 'Create Account' : 'Login'}
+          {curState === "Sign Up" ? "Create Account" : "Login"}
         </button>
 
-        {curState === 'Sign Up' && (
+        {curState === "Sign Up" && (
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <input type="checkbox" />
             <p>Agree To Privacy Policy and TOS</p>
@@ -112,13 +111,13 @@ const LoginPage = () => {
 
         {/* switch between login and sign up */}
         <div className="flex flex-col gap-2">
-          {curState === 'Sign Up' ? (
+          {curState === "Sign Up" ? (
             <p className="text-sm text-gray-600">
-              Already Have An Account{' '}
+              Already Have An Account{" "}
               <span
                 onClick={() => {
-                  SetCurState('Login')
-                  SetIsDataSubmitted(false)
+                  SetCurState("Login");
+                  SetIsDataSubmitted(false);
                 }}
                 className="font-medium text-violet-500 cursor-pointer"
               >
@@ -127,9 +126,9 @@ const LoginPage = () => {
             </p>
           ) : (
             <p className="text-sm text-gray-600">
-              Create An Account{' '}
+              Create An Account{" "}
               <span
-                onClick={() => SetCurState('Sign Up')}
+                onClick={() => SetCurState("Sign Up")}
                 className="font-medium text-violet-500 cursor-pointer"
               >
                 Click Here
@@ -139,7 +138,7 @@ const LoginPage = () => {
         </div>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default LoginPage
+export default LoginPage;

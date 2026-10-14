@@ -6,7 +6,7 @@ import { MsgTimeFormat } from "../lib/utils";
 import { ChatContext } from "../../context/chatContext";
 import { AuthContext } from "../../context/authContext";
 
-const ChatContainer = () => {
+const ChatContainer = ({ showRightSideBar, setShowRightSideBar }) => {
   const {
     msgs,
     selectedUsers: selectedUser,
@@ -69,15 +69,18 @@ const ChatContainer = () => {
             <span className="w-2 h-2 rounded-full bg-green-500"></span>
           )}
         </p>
+        {/* Mobile: back to user list */}
         <img
           onClick={() => setSelectedUser(null)}
           src={assets.arrow_icon}
           className="md:hidden max-w-7 cursor-pointer"
           alt="arrow"
         />
+        {/* Desktop: toggle right sidebar */}
         <img
+          onClick={() => setShowRightSideBar((prev) => !prev)}
           src={assets.help_icon}
-          className="max-md:hidden max-w-5"
+          className="max-md:hidden max-w-5 cursor-pointer"
           alt="help"
         />
       </div>
@@ -169,5 +172,4 @@ const ChatContainer = () => {
     </div>
   );
 };
-
 export default ChatContainer;
