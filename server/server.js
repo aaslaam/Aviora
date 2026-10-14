@@ -52,7 +52,10 @@ app.get("/api/status", (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 await ConnectDB();
-
+if(process.env.NODE_ENV !== "production"){
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+}
+// export vercel
+export default server
