@@ -4,12 +4,12 @@ import { useNavigate } from 'react-router-dom'
 import { AuthContext } from '../../context/authContext'
 import { ChatContext } from '../../context/chatContext'
 
-const SideBar = ({ selectedUser, setSelectedUser }) => {
+const SideBar = () => {
   const navigate = useNavigate()
   const { logout, onlineUsers } = useContext(AuthContext)
   const {
-    msgs, users, selectedUsers, getUsers,
-    getMsgs, sendMsgs, SetSelectedUsers, unseenMsgs, SetUnseenMsgs
+    users, selectedUsers, getUsers,
+    SetSelectedUsers, unseenMsgs, SetUnseenMsgs
   } = useContext(ChatContext)
 
   const [input, SetInput] = useState('')
@@ -17,6 +17,12 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
   const handleLogout = () => {
     logout()
     navigate('/login')
+  }
+
+  // select user + clear unread badge
+  const handleSelectUser = (user) => {
+    SetSelectedUsers(user)
+    SetUnseenMsgs((prev) => ({ ...prev, [user._id]: 0 }))
   }
 
   // filtered users search bar
@@ -33,7 +39,7 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
   return (
     <div
       className={`bg-[#8185B2]/10 h-full p-5 rounded-r-xl overflow-y-scroll text-white ${
-        selectedUser ? 'max-md:hidden' : ''
+        selectedUsers ? 'max-md:hidden' : ''
       }`}
     >
       <div className="pb-5">
@@ -79,11 +85,9 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
         {filteredUsers.map((user) => (
           <div
             key={user._id}
-            onClick={() => {
-              setSelectedUser(user)
-            }}
+            onClick={() => handleSelectUser(user)}
             className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:text-sm ${
-              selectedUser?._id === user._id && 'bg-[#282142] '
+              selectedUsers?._id === user._id && 'bg-[#282142] '
             }`}
           >
             <img
@@ -103,7 +107,7 @@ const SideBar = ({ selectedUser, setSelectedUser }) => {
             </div>
             <div>
               {/* Notification badge */}
-              {unseenMsgs[user._id] > 0 && (
+              {unseenMsgs?.[user._id] > 0 && (
                 <p className="absolute top-4 right-4 text-xs h-5 w-5 flex justify-center items-center rounded-full bg-violet-500/50">
                   {unseenMsgs[user._id]}
                 </p>
