@@ -76,14 +76,39 @@ export const markMsgAsSeen = async (req, res) => {
 // send Msgs to selected user
 export const sendMsgs = async (req, res) => {
   try {
-    const { image, text } = req.body;
+    const { image, text, audio, audioDuration } = req.body;
     const recieverId = req.params.id;
     const senderId = req.user._id;
     let imageUrl;
+    let audioUrl;
+    let duration;
 
     if (image) {
       const uploadResponse = await cloudinary.uploader.upload(image);
       imageUrl = uploadResponse.secure_url;
+    }
+
+    if (audio) {
+      if (typeof audio !== "string" || !audio.startsWith("data:audio/")) {
+        return res.json({ success: false, message: "Invalid audio file" });
+      }
+
+      // Browsers produce e.g. "data:audio/webm;codecs=opus;base64,..."
+      // Strip the codecs parameter so Cloudinary accepts the data URI
+      const cleanAudio = audio.replace(
+        /^data:audio\/([\w.+-]+)[^,]*;base64,/,
+        "data:audio/$1;base64,",
+      );
+
+      // Cloudinary stores audio under the "video" resource type
+      const uploadResponse = await cloudinary.uploader.upload(cleanAudio, {
+        resource_type: "video",
+        folder: "voice-messages",
+      });
+      audioUrl = uploadResponse.secure_url;
+
+      const parsed = Number(audioDuration);
+      duration = Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
     }
 
     const newMsg = await Message.create({
@@ -91,6 +116,8 @@ export const sendMsgs = async (req, res) => {
       recieverId,
       text,
       image: imageUrl,
+      audio: audioUrl,
+      audioDuration: duration,
     });
 
     // emit new msg to reciever
