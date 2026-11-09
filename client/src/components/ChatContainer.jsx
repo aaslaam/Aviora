@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import EmojiPicker from "emoji-picker-react";
 
 import assets from "../assets/assets";
 import { MsgTimeFormat } from "../lib/utils";
@@ -19,6 +20,27 @@ const blobToDataURL = (blob) =>
 const formatTimer = (s) =>
   `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
+const MAX_MESSAGE_GRAPHEMES = 2000;
+const graphemeSegmenter = new Intl.Segmenter(undefined, {
+  granularity: "grapheme",
+});
+const emojiGraphemeRegex =
+  /^(?:\p{Extended_Pictographic}(?:\uFE0F)?(?:\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?(?:\p{Emoji_Modifier})?)*|\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3)$/u;
+
+const getGraphemeCount = (text) =>
+  Array.from(graphemeSegmenter.segment(text)).length;
+
+const isEmojiOnlyMessage = (text) => {
+  const graphemes = Array.from(graphemeSegmenter.segment(text.trim()),
+    ({ segment }) => segment,
+  );
+  return (
+    graphemes.length > 0 &&
+    graphemes.length <= 3 &&
+    graphemes.every((grapheme) => emojiGraphemeRegex.test(grapheme))
+  );
+};
+
 const ChatContainer = ({ showRightSideBar, setShowRightSideBar }) => {
   const {
     msgs,
@@ -30,15 +52,61 @@ const ChatContainer = ({ showRightSideBar, setShowRightSideBar }) => {
   const { authUser, onlineUsers } = useContext(AuthContext);
 
   const scrollEnd = useRef(null);
+  const composerRef = useRef(null);
+  const inputRef = useRef(null);
 
   const [input, setInput] = useState("");
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
 
   const handleSendMsg = async (e) => {
     e.preventDefault();
-    if (input.trim() === "") return;
-    await sendMsgs({ text: input.trim() });
+    const text = input.trim();
+    if (text === "") return;
+    if (getGraphemeCount(text) > MAX_MESSAGE_GRAPHEMES) {
+      toast.error(`Messages can contain up to ${MAX_MESSAGE_GRAPHEMES} characters`);
+      return;
+    }
+    await sendMsgs({ text });
     setInput("");
+    setIsEmojiPickerOpen(false);
   };
+
+  const handleEmojiSelect = ({ emoji }) => {
+    const inputElement = inputRef.current;
+    if (!inputElement) return;
+
+    const start = inputElement.selectionStart ?? inputElement.value.length;
+    const end = inputElement.selectionEnd ?? start;
+    const nextInput =
+      inputElement.value.slice(0, start) + emoji + inputElement.value.slice(end);
+    const nextCursor = start + emoji.length;
+
+    setInput(nextInput);
+    requestAnimationFrame(() => {
+      inputElement.focus();
+      inputElement.setSelectionRange(nextCursor, nextCursor);
+    });
+  };
+
+  useEffect(() => {
+    if (!isEmojiPickerOpen) return;
+
+    const handleMouseDown = (event) => {
+      if (!composerRef.current?.contains(event.target)) {
+        setIsEmojiPickerOpen(false);
+      }
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setIsEmojiPickerOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isEmojiPickerOpen]);
 
   const handleSendImg = async (e) => {
     const file = e.target.files[0];
@@ -142,7 +210,11 @@ const ChatContainer = ({ showRightSideBar, setShowRightSideBar }) => {
               />
             ) : (
               <p
-                className={`max-w-50 p-2 md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${
+                className={`max-w-50 font-light rounded-lg mb-8 break-all text-white ${
+                  isEmojiOnlyMessage(msg.text || "")
+                    ? "p-0 text-4xl leading-tight bg-transparent"
+                    : "p-2 text-base md:text-sm bg-violet-500/30"
+                } ${
                   msg.senderId === authUser._id
                     ? "rounded-br-none"
                     : "rounded-bl-none"
@@ -169,7 +241,21 @@ const ChatContainer = ({ showRightSideBar, setShowRightSideBar }) => {
       </div>
 
       {/* Chat Input Area */}
-      <div className="absolute right-0 bottom-0 left-0 flex items-center gap-3 p-3">
+      <div className="absolute right-0 bottom-0 left-0 p-3">
+        <div ref={composerRef} className="relative flex items-center gap-3">
+          {isEmojiPickerOpen && !isRecording && (
+            <div className="absolute bottom-full left-0 mb-2 z-50 w-full sm:w-87.5 max-h-95 overflow-hidden">
+              <EmojiPicker
+                onEmojiClick={handleEmojiSelect}
+                width="100%"
+                height={380}
+                theme="dark"
+                searchDisabled={false}
+                skinTonesDisabled={false}
+                suggestedEmojisMode="recent"
+              />
+            </div>
+          )}
         {isRecording ? (
           /* Recording UI */
           <div className="flex flex-1 items-center gap-3 bg-gray-100/12 px-3 py-3 rounded-full">
@@ -195,8 +281,9 @@ const ChatContainer = ({ showRightSideBar, setShowRightSideBar }) => {
             </span>
           </div>
         ) : (
-          <div className="flex flex-1 items-center bg-gray-100/12 px-3 rounded-full">
+          <div className="flex flex-1 items-center gap-1 bg-gray-100/12 px-3 rounded-full">
             <input
+              ref={inputRef}
               onChange={(e) => setInput(e.target.value)}
               value={input}
               onKeyDown={(e) => {
@@ -213,13 +300,38 @@ const ChatContainer = ({ showRightSideBar, setShowRightSideBar }) => {
               id="image"
               hidden
             />
-            <label htmlFor="image">
+            <label
+              htmlFor="image"
+              className="p-2 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition cursor-pointer"
+            >
               <img
                 src={assets.gallery_icon}
-                className="w-5 mr-2 cursor-pointer"
+                className="w-5"
                 alt="gallery_icon"
               />
             </label>
+            <button
+              type="button"
+              onClick={() => setIsEmojiPickerOpen((open) => !open)}
+              className="p-2 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition cursor-pointer"
+              aria-label="Choose an emoji"
+              aria-expanded={isEmojiPickerOpen}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                <path d="M9 9h.01M15 9h.01" />
+              </svg>
+            </button>
           </div>
         )}
 
@@ -251,6 +363,7 @@ const ChatContainer = ({ showRightSideBar, setShowRightSideBar }) => {
             alt="send_button"
           />
         )}
+        </div>
       </div>
     </div>
   ) : (

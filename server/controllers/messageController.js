@@ -3,6 +3,11 @@ import User from "../Models/Users.js";
 import cloudinary from "../lib/cloudinary.js";
 import { io, userSocketMap } from "../server.js";
 
+const MAX_MESSAGE_GRAPHEMES = 2000;
+const graphemeSegmenter = new Intl.Segmenter(undefined, {
+  granularity: "grapheme",
+});
+
 // get all users except logged in user
 export const getUsersForSidebar = async (req, res) => {
   try {
@@ -77,6 +82,18 @@ export const markMsgAsSeen = async (req, res) => {
 export const sendMsgs = async (req, res) => {
   try {
     const { image, text, audio, audioDuration } = req.body;
+    if (text !== undefined) {
+      if (typeof text !== "string") {
+        return res.status(400).json({ success: false, message: "Invalid message text" });
+      }
+      if (Array.from(graphemeSegmenter.segment(text)).length > MAX_MESSAGE_GRAPHEMES) {
+        return res.status(400).json({
+          success: false,
+          message: `Messages can contain up to ${MAX_MESSAGE_GRAPHEMES} characters`,
+        });
+      }
+    }
+
     const recieverId = req.params.id;
     const senderId = req.user._id;
     let imageUrl;
